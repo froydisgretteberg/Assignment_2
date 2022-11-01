@@ -1,0 +1,159 @@
+---
+title: "Assignment_2"
+format: html
+editor: visual
+---
+
+# Part 1 - Lactate thresholds
+
+## Watt ved 2mmol
+
+```{r}
+library(tidyverse)
+library(exscidata)
+
+data("cyclingstudy")
+```
+
+```{r}
+#| include: false
+#| echo: false
+#| message: false
+#| warning: false
+```
+
+```{r}
+dat <- cyclingstudy %>%
+  select(subject, group, timepoint, lac.175:lac.325) %>%
+  filter(timepoint == "pre", subject == 5) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.",
+               names_transform = list(watt = as.numeric),
+               cols = lac.175:lac.325)
+m<- lm(watt ~ lactate, data = dat)
+summary(m)
+```
+
+```{r}
+dat %>%
+  ggplot(aes(watt, lactate, group = subject)) +
+  geom_line(lty = 2) +
+  geom_point(shape = 21, fill = "lightyellow", size = 2.5) +
+  geom_hline(yintercept = 2, color = "orange") +
+  geom_vline(xintercept = 245, color = "lightblue")
+
+```
+
+Figuren over viser watt (245) ved 2mmol
+
+## Watt  ved 4mmol
+
+```{r}
+#| include: false
+#| echo: false
+#| message: false
+#| warning: false
+```
+
+```{r}
+library(tidyverse)
+library(exscidata)
+
+data("cyclingstudy")
+```
+
+```{r}
+cyclingstudy %>%
+  select(subject, group, timepoint, lac.175:lac.325) %>%
+  filter(timepoint == "pre", subject == 5) %>%
+  pivot_longer(names_to = "watt", 
+               values_to = "lactate", 
+               names_prefix = "lac.",
+               names_transform = list(watt = as.numeric),
+               cols = lac.175:lac.325) %>%
+
+ ggplot(aes(watt, lactate, group = subject)) +
+  geom_line(lty = 2) +
+  geom_point(shape = 21, fill = "lightyellow", size = 2.5) +
+  geom_hline(yintercept = 4, color = "orange") +
+  geom_vline(xintercept = 309, color = "lightblue")
+```
+
+Figuren over viser watt (309) ved 4mmol
+
+### 
+
+## Reliabilitet
+
+```{r}
+#| include: false
+#| echo: false
+#| message: false
+#| warning: false
+```
+
+```{r}
+library(tidyverse)
+library(exscidata)
+
+data("cyclingstudy")
+```
+
+```{r}
+cyclingstudy  %>%
+  select(subject, group, timepoint, lac.225:lac.325) %>%
+  filter(subject == 5) %>%
+  pivot_wider(names_from = "timepoint", 
+               values_from = lac.225:lac.325) 
+               
+  mutate(lac_diff = lac.225 - lac.325)
+```
+
+Fikk det ikke til å fungere, og litt usikker på koden.
+
+# Part 2 - predicting sizes of DNA fragments
+
+```{r}
+library(readr)
+Results <- read_csv("data/Results.csv")
+View(Results)
+
+ladder <- data.frame(dist = c(29, 43.5, 60.5,
+                              80.5, 106.5,  141.5,  
+                              181.5, 243.5, 281.5,
+                              328.5, 390.5, 465.5, 580.5))
+
+ mw = c(1000, 900, 800, 
+                            700, 600, 500,
+                            400, 300, 250, 
+                            200, 150, 100, 50)
+ 
+unknown <- data.frame(dist = c(37, 60.5, 89.5, 122.5, 160.5, 208.5, 260.5, 334.5, 374.5, 422.5, 478.5, 540.5, 612.5, 242.5, 43.5, 105.5, 268.5, 307.5, 588.5, 17.5, 148.5, 236.5, 288.5, 501.5, 588.5, 102.5, 236.5, 298.5, 581.5, 98.5, 187.5, 233.5, 298.5, 414.5, 574.5, 270.5, 96.5, 277.5, 292.5, 90.5, 222.5, 284.5, 482.5, 526.5))
+
+cal <- lm(log(mw) ~ dist, data = ladder)
+
+ladder %>%
+  ggplot(aes(dist, log(mw))) +
+  geom_point() +
+  geom_smooth(se = FALSE, method = "lm") +
+  labs(x = "dist",
+       y = "log(mv)")
+
+
+
+summary (cal)
+
+
+preds <- exp(predict(cal, newdata = unknown))
+
+summary(preds)
+```
+
+```{r}
+unknown %>%
+  ggplot(aes(dist, preds)) +
+  geom_point()
+```
+
+# Part 3
