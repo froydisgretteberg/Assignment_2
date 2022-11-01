@@ -156,4 +156,47 @@ unknown %>%
   geom_point()
 ```
 
-# Part 3
+# Part 3 - Interpreting a regression table
+
+```{r}
+#| include: false
+#| echo: false
+#| message: false
+#| warning: false
+```
+
+```{r}
+library(tidyverse)
+library (exscidata)
+library(gt)
+data(hypertrophy)
+```
+
+```{r}
+dat1 <- hypertrophy %>%
+  mutate(VL_change = ((VL_T3 - VL_T1) / VL_T1 * 100),
+         P_change = ((PHOSPHOP70S6K_T3 - PHOSPHOP70S6K_T1) / PHOSPHOP70S6K_T1 * 100)) %>%
+  select(PARTICIPANT, VL_change, P_change) %>%
+  print()
+
+
+m <- lm(VL_change ~ P_change, data = dat1)
+
+summary(m)
+
+plot(m)
+```
+
+```{r}
+dat1 %>%
+  ggplot(aes(P_change, VL_change)) +
+  geom_point() +
+  geom_smooth(se = FALSE, method = "lm") +
+  labs(x = "T1 to T3 p-p70s6k change (%)",
+       y = "T1 to T3 VL thickness change (%)") +
+  geom_vline(xintercept = 0) +
+  geom_hline(yintercept = 0) +
+  annotate("label", x = max(-60), y = 20, label = "p = 0.1646")
+
+summary(dat1)
+```
